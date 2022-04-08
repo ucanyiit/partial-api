@@ -11,6 +11,10 @@ NP = "non-paying"
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
 
+def convert_str_to_date(str_date):
+    return dt.datetime.strptime(str_date, DATE_FORMAT)
+
+
 class UserStatusSearch:
     RECORDS = [
         {"user_id": 1, "created_at": "2017-01-01T10:00:00", "status": P},
@@ -22,16 +26,16 @@ class UserStatusSearch:
     ]
 
     def __init__(self):
-
         self.user_records = {}
 
         for record in self.RECORDS:
             user_id = record["user_id"]
+
             if user_id not in self.user_records:
                 self.user_records[record["user_id"]] = []
 
             new_record = {
-                "created_at": dt.datetime.strptime(record["created_at"], DATE_FORMAT),
+                "created_at": convert_str_to_date(record["created_at"]),
                 "status": record["status"],
             }
 
@@ -44,11 +48,10 @@ class UserStatusSearch:
             self.user_records[user_id].sort(key=sort_function)
 
     def get_status(self, user_id, date):
-
         status = NP
 
         if type(date) == str:
-            date = dt.datetime.strptime(date, DATE_FORMAT)
+            date = convert_str_to_date(date)
 
         if user_id not in self.user_records:
             return NP
@@ -113,13 +116,13 @@ class AggregateUserCity:
                 self.transactions.append(json.loads(line))
 
     def check_transaction_status(self, transaction, status):
-        user_id = transaction['user_id']
+        user_id = transaction["user_id"]
         created_at = transaction["created_at"]
         t_status = self.user_status_search.get_status(user_id, created_at)
         return status == t_status
 
     def check_transaction_city(self, transaction, city):
-        ip = transaction['ip']
+        ip = transaction["ip"]
         t_city = self.ip_range_search.get_city(ip)
         return t_city == city
 
@@ -144,10 +147,12 @@ app = Flask(__name__)
 def user_status():
     """Return user status for a given date"""
     user_id = int(request.args.get("user_id"))
-    date = dt.datetime.strptime(str(request.args.get("date")), DATE_FORMAT)
+    date = convert_str_to_date(str(request.args.get("date")))
 
     user_status_search = UserStatusSearch()
-    return jsonify({"user_status": user_status_search.get_status(user_id, date)})
+    user_status = user_status_search.get_status(user_id, date)
+
+    return jsonify({"user_status": user_status})
 
 
 @app.route("/ip_city")
@@ -156,7 +161,9 @@ def ip_city():
     ip = str(request.args.get("ip"))
 
     ip_range_search = IpRangeSearch()
-    return jsonify({"city": ip_range_search.get_city(ip)})
+    city = ip_range_search.get_city(ip)
+
+    return jsonify({"city": city})
 
 
 @app.route("/user_city")
@@ -167,7 +174,9 @@ def user_city():
     city = str(request.args.get("city"))
 
     aggregate_user_city = AggregateUserCity()
-    return jsonify({"product_price": aggregate_user_city.get_aggregate(status, city)})
+    product_price = aggregate_user_city.get_aggregate(status, city)
+
+    return jsonify({"product_price": product_price})
 
 
 if __name__ == "__main__":
