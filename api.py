@@ -3,20 +3,21 @@ import datetime as dt
 from flask import Flask, jsonify, request
 
 # User statuses
-P = 'paying'
-C = 'completed'
-NP = 'non-paying'
+P = "paying"
+C = "completed"
+NP = "non-paying"
 
-DATE_FORMAT = '%Y-%m-%dT%H:%M:%S'
+DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
+
 
 class UserStatusSearch:
     RECORDS = [
-        {'user_id': 1, 'created_at': '2017-01-01T10:00:00', 'status': P},
-        {'user_id': 1, 'created_at': '2017-03-01T19:00:00', 'status': P},
-        {'user_id': 1, 'created_at': '2017-02-01T12:00:00', 'status': C},
-        {'user_id': 2, 'created_at': '2017-09-01T17:00:00', 'status': P},
-        {'user_id': 3, 'created_at': '2017-10-01T10:00:00', 'status': P},
-        {'user_id': 3, 'created_at': '2016-02-01T05:00:00', 'status': C},
+        {"user_id": 1, "created_at": "2017-01-01T10:00:00", "status": P},
+        {"user_id": 1, "created_at": "2017-03-01T19:00:00", "status": P},
+        {"user_id": 1, "created_at": "2017-02-01T12:00:00", "status": C},
+        {"user_id": 2, "created_at": "2017-09-01T17:00:00", "status": P},
+        {"user_id": 3, "created_at": "2017-10-01T10:00:00", "status": P},
+        {"user_id": 3, "created_at": "2016-02-01T05:00:00", "status": C},
     ]
 
     def __init__(self):
@@ -24,45 +25,48 @@ class UserStatusSearch:
         self.user_records = {}
 
         for record in self.RECORDS:
-            user_id = record['user_id']
+            user_id = record["user_id"]
             if user_id not in self.user_records:
-                self.user_records[record['user_id']] = []
+                self.user_records[record["user_id"]] = []
 
-            new_record = {'created_at': dt.datetime.strptime(record['created_at'], DATE_FORMAT), 'status': record['status']}
+            new_record = {
+                "created_at": dt.datetime.strptime(record["created_at"], DATE_FORMAT),
+                "status": record["status"],
+            }
 
             self.user_records[user_id].append(new_record)
 
         def sort_function(e):
-            return e['created_at']
+            return e["created_at"]
 
         for user_id in self.user_records:
             self.user_records[user_id].sort(key=sort_function)
 
     def get_status(self, user_id, date):
-    
+
         status = NP
 
         if user_id not in self.user_records:
             return NP
 
         for record in self.user_records[user_id]:
-            if record['created_at'] <= date:
-                status = record['status']
-        
+            if record["created_at"] <= date:
+                status = record["status"]
+
         return status
 
 
 class IpRangeSearch:
     RANGES = {
-        'London': [
-            {'start': '10.10.0.0', 'end': '10.10.255.255'},
-            {'start': '192.168.1.0', 'end': '192.168.1.255'},
+        "London": [
+            {"start": "10.10.0.0", "end": "10.10.255.255"},
+            {"start": "192.168.1.0", "end": "192.168.1.255"},
         ],
-        'Munich': [
-            {'start': '10.12.0.0', 'end': '10.12.255.255'},
-            {'start': '172.16.10.0', 'end': '172.16.11.255'},
-            {'start': '192.168.2.0', 'end': '192.168.2.255'},
-        ]
+        "Munich": [
+            {"start": "10.12.0.0", "end": "10.12.255.255"},
+            {"start": "172.16.10.0", "end": "172.16.11.255"},
+            {"start": "192.168.2.0", "end": "192.168.2.255"},
+        ],
     }
 
     def __init__(self):
@@ -83,40 +87,35 @@ class AggregateUserCity:
 app = Flask(__name__)
 
 
-@app.route('/user_status')
+@app.route("/user_status")
 def user_status():
     """Return user status for a given date"""
-    user_id = int(request.args.get('user_id'))
-    date = dt.datetime.strptime(
-        str(request.args.get('date')), DATE_FORMAT)
+    user_id = int(request.args.get("user_id"))
+    date = dt.datetime.strptime(str(request.args.get("date")), DATE_FORMAT)
 
     user_status_search = UserStatusSearch()
-    return jsonify({
-        'user_status': user_status_search.get_status(user_id, date)
-    })
+    return jsonify({"user_status": user_status_search.get_status(user_id, date)})
 
 
-@app.route('/ip_city')
+@app.route("/ip_city")
 def ip_city():
     """Return city for a given ip"""
-    ip = str(request.args.get('ip'))
+    ip = str(request.args.get("ip"))
 
     ip_range_search = IpRangeSearch()
-    return jsonify({'city': ip_range_search.get_city(ip)})
+    return jsonify({"city": ip_range_search.get_city(ip)})
 
 
-@app.route('/user_city')
+@app.route("/user_city")
 def user_city():
     """Return aggregated sum of the product price for the given user status
     and city"""
-    status = str(request.args.get('user_status'))
-    city = str(request.args.get('city'))
+    status = str(request.args.get("user_status"))
+    city = str(request.args.get("city"))
 
     aggregate_user_city = AggregateUserCity()
-    return jsonify({
-        'product_price': aggregate_user_city.get_aggregate(status, city)
-    })
+    return jsonify({"product_price": aggregate_user_city.get_aggregate(status, city)})
 
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port='8000')
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port="8000")
