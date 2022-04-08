@@ -7,6 +7,7 @@ P = 'paying'
 C = 'completed'
 NP = 'non-paying'
 
+DATE_FORMAT = '%Y-%m-%dT%H:%M:%S'
 
 class UserStatusSearch:
     RECORDS = [
@@ -19,10 +20,36 @@ class UserStatusSearch:
     ]
 
     def __init__(self):
-        pass
+
+        self.user_records = {}
+
+        for record in self.RECORDS:
+            user_id = record['user_id']
+            if user_id not in self.user_records:
+                self.user_records[record['user_id']] = []
+
+            new_record = {'created_at': dt.datetime.strptime(record['created_at'], DATE_FORMAT), 'status': record['status']}
+
+            self.user_records[user_id].append(new_record)
+
+        def sort_function(e):
+            return e['created_at']
+
+        for user_id in self.user_records:
+            self.user_records[user_id].sort(key=sort_function)
 
     def get_status(self, user_id, date):
-        pass
+    
+        status = NP
+
+        if user_id not in self.user_records:
+            return NP
+
+        for record in self.user_records[user_id]:
+            if record['created_at'] <= date:
+                status = record['status']
+        
+        return status
 
 
 class IpRangeSearch:
@@ -61,7 +88,7 @@ def user_status():
     """Return user status for a given date"""
     user_id = int(request.args.get('user_id'))
     date = dt.datetime.strptime(
-        str(request.args.get('date')), '%Y-%m-%dT%H:%M:%S')
+        str(request.args.get('date')), DATE_FORMAT)
 
     user_status_search = UserStatusSearch()
     return jsonify({
@@ -92,4 +119,4 @@ def user_city():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0', port='8000')
