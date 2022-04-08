@@ -72,8 +72,29 @@ class IpRangeSearch:
     def __init__(self):
         pass
 
+    def parse_ip(self, ip):
+        return [int(i) for i in ip.split(".")]
+
+    def ip_in_range(self, ip, ip_range):
+        ip_address = self.parse_ip(ip)
+        start_address = self.parse_ip(ip_range["start"])
+        end_address = self.parse_ip(ip_range["end"])
+
+        for i in range(0, 4):
+            if ip_address[i] < start_address[i]:
+                return False
+            if ip_address[i] > end_address[i]:
+                return False
+
+        return True
+
     def get_city(self, ip):
-        pass
+        for city_name in self.RANGES:
+            city = self.RANGES[city_name]
+            for ip_range in city:
+                if self.ip_in_range(ip, ip_range):
+                    return city_name
+        return None
 
 
 class AggregateUserCity:
