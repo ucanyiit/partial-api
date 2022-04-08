@@ -1,6 +1,8 @@
 import datetime as dt
+import json
 
 from flask import Flask, jsonify, request
+from numpy import product
 
 # User statuses
 P = "paying"
@@ -45,6 +47,9 @@ class UserStatusSearch:
     def get_status(self, user_id, date):
 
         status = NP
+
+        if type(date) == str:
+            date = dt.datetime.strptime(date, DATE_FORMAT)
 
         if user_id not in self.user_records:
             return NP
@@ -99,10 +104,40 @@ class IpRangeSearch:
 
 class AggregateUserCity:
     def __init__(self):
-        pass
+        self.user_status_search = UserStatusSearch()
+        self.ip_range_search = IpRangeSearch()
+        self.transactions = []
+
+        with open("transactions.json", "r") as transactions_file:
+            lines = transactions_file.readlines()
+            for line in lines:
+                self.transactions.append(json.loads(line))
+
+    def check_transaction_status(self, transaction, status):
+        user_id = transaction['user_id']
+        created_at = transaction["created_at"]
+        t_status = self.user_status_search.get_status(user_id, created_at)
+        return status == t_status
+
+    def check_transaction_city(self, transaction, city):
+        ip = transaction['ip']
+        t_city = self.ip_range_search.get_city(ip)
+        return t_city == city
 
     def get_aggregate(self, status, city):
-        pass
+        product_price = 0
+
+        for transaction in self.transactions:
+            if not self.check_transaction_status(transaction, status):
+                continue
+            if not self.check_transaction_city(transaction, city):
+                continue
+
+            print(transaction)
+
+            product_price += transaction["product_price"]
+
+        return product_price
 
 
 app = Flask(__name__)
