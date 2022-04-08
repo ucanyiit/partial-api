@@ -132,8 +132,6 @@ class AggregateUserCity:
             if not self.check_transaction_city(transaction, city):
                 continue
 
-            print(transaction)
-
             product_price += transaction["product_price"]
 
         return product_price
