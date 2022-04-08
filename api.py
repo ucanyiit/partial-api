@@ -2,7 +2,6 @@ import datetime as dt
 import json
 
 from flask import Flask, jsonify, request
-from numpy import product
 
 # User statuses
 P = "paying"
