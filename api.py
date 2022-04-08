@@ -99,7 +99,7 @@ class IpRangeSearch:
             for ip_range in city:
                 if self.ip_in_range(ip, ip_range):
                     return city_name
-        return None
+        return "unknown"
 
 
 class AggregateUserCity:
