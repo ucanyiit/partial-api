@@ -1,4 +1,46 @@
 # Partial API Task
+## Running Project
+
+You can run the project using Docker if you have it installed on your system:
+
+```
+docker-compose up
+```
+
+Or you can use python directly.
+
+```
+pip install -r requirements.txt
+python api.py
+```
+
+## Tests
+
+You can run the tests using:
+
+```
+python tests.py
+```
+
+## Tasks
+
+1. `/user_status`
+
+In the initialization, the `UserStatusSearch` class groups the records according to their `user_id`s. Then it sorts those records according to their `created_at` times. In the process, it converts the dates from `str` to `date` format.
+
+In the `get_status` function it first sets the result variable `status` to `NP`. Then it iterates over all of the dates for the given `user_id` and sets `status` if the date is before the given date. (We can use the binary search here since the records are sorted)
+
+2. `/ip_city`
+
+`get_city` method iterates over all of the cities in the `RANGES` and `ip_range`s for each city. It checks it using the `ip_in_range` function. If this function returns `True`, it simply returns the corresponding `city_name`.
+
+If, in the end, there are no cities within the given range, the function returns `unknown`.
+
+3. `/user_city`
+
+In initialization, it creates the 2 classes that are used for previous endpoints (`UserStatusSearch` and `IpRangeSearch`). Afterward, it reads the `transactions.json` file and saves the data into a dictionary named `transactions`.
+
+The `get_aggegate` function checks transaction status using `check_transaction_status` and transaction city using `check_transaction_city`. Those functions call the corresponding class. If both of them return `True`, it adds the `product_price`s into the return variable.
 
 ## Goal
 
