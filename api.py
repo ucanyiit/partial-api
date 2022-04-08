@@ -96,8 +96,7 @@ class IpRangeSearch:
         return True
 
     def get_city(self, ip):
-        for city_name in self.RANGES:
-            city = self.RANGES[city_name]
+        for city_name, city in self.RANGES.items():
             for ip_range in city:
                 if self.ip_in_range(ip, ip_range):
                     return city_name
